@@ -1,0 +1,256 @@
+== cycle |    fetch |   decode |  exec1   |  exec2   |   memory | writeBack|
+== ------+----------+----------+----------+----------+----------+----------|
+==     0 |        0 | ffffffff | ffffffff | ffffffff | ffffffff | ffffffff |
+==     1 |        4 |        0 | ffffffff | ffffffff | ffffffff | ffffffff |
+==     2 |        8 |        4 |        0 | ffffffff | ffffffff | ffffffff |
+Data hazard... register X0 will be written by the instruction in the ex1 stage
+==     3 |        8 |        4 |        4 |        0 | ffffffff | ffffffff |
+Data hazard... register X0 will be written by the instruction in the ex2 stage
+==     4 |        8 |        4 |        4 |        4 |        0 | ffffffff |
+Data hazard... register X0 will be written by the instruction in the mem stage
+==     5 |        8 |        4 |        4 |        4 |        4 |        0 |
+Data hazard... register X0 will be written by the instruction in the wb stage
+==     6 |        8 |        4 |        4 |        4 |        4 |        4 |
+==     7 |        c |        8 |        4 |        4 |        4 |        4 |
+==     8 |       10 |        c |        8 |        4 |        4 |        4 |
+Data hazard... register X1 will be written by the instruction in the ex2 stage
+==     9 |       10 |        c |        c |        8 |        4 |        4 |
+Data hazard... register X1 will be written by the instruction in the mem stage
+==    10 |       10 |        c |        c |        c |        8 |        4 |
+Data hazard... register X1 will be written by the instruction in the wb stage
+==    11 |       10 |        c |        c |        c |        c |        8 |
+==    12 |       14 |       10 |        c |        c |        c |        c |
+==    13 |       18 |       14 |       10 |        c |        c |        c |
+Data hazard... register X3 will be written by the instruction in the ex1 stage
+==    14 |       18 |       14 |       14 |       10 |        c |        c |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==    15 |       18 |       14 |       14 |       14 |       10 |        c |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==    16 |       18 |       14 |       14 |       14 |       14 |       10 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==    17 |       18 |       14 |       14 |       14 |       14 |       14 |
+==    18 |       1c |       18 |       14 |       14 |       14 |       14 |
+==    19 |       20 |       1c |       18 |       14 |       14 |       14 |
+==    20 |       24 |       20 |       1c |       18 |       14 |       14 |
+Data hazard... register X1 will be written by the instruction in the ex2 stage
+==    21 |       24 |       20 |       20 |       1c |       18 |       14 |
+Data hazard... register X1 will be written by the instruction in the mem stage
+Control hazard... squashing ID, and EX1 and resetting PC
+==    22 |        c | ffffffff | ffffffff | ffffffff |       1c |       18 |
+==    23 |       10 |        c | ffffffff | ffffffff | ffffffff |       1c |
+==    24 |       14 |       10 |        c | ffffffff | ffffffff | ffffffff |
+==    25 |       18 |       14 |       10 |        c | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex1 stage
+==    26 |       18 |       14 |       14 |       10 |        c | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==    27 |       18 |       14 |       14 |       14 |       10 |        c |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==    28 |       18 |       14 |       14 |       14 |       14 |       10 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==    29 |       18 |       14 |       14 |       14 |       14 |       14 |
+==    30 |       1c |       18 |       14 |       14 |       14 |       14 |
+==    31 |       20 |       1c |       18 |       14 |       14 |       14 |
+Control hazard... squashing ID, and EX1 and resetting PC
+==    32 |       20 | ffffffff | ffffffff | ffffffff |       14 |       14 |
+==    33 |       24 |       20 | ffffffff | ffffffff | ffffffff |       14 |
+==    34 |       28 |       24 |       20 | ffffffff | ffffffff | ffffffff |
+==    35 |       2c |       28 |       24 |       20 | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==    36 |       2c |       28 |       28 |       24 |       20 | ffffffff |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==    37 |       2c |       28 |       28 |       28 |       24 |       20 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==    38 |       2c |       28 |       28 |       28 |       28 |       24 |
+==    39 |       30 |       2c |       28 |       28 |       28 |       28 |
+==    40 |       34 |       30 |       2c |       28 |       28 |       28 |
+Data hazard... register X2 will be written by the instruction in the ex2 stage
+==    41 |       34 |       30 |       30 |       2c |       28 |       28 |
+Data hazard... register X2 will be written by the instruction in the mem stage
+Control hazard... squashing ID, and EX1 and resetting PC
+==    42 |        c | ffffffff | ffffffff | ffffffff |       2c |       28 |
+==    43 |       10 |        c | ffffffff | ffffffff | ffffffff |       2c |
+==    44 |       14 |       10 |        c | ffffffff | ffffffff | ffffffff |
+==    45 |       18 |       14 |       10 |        c | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex1 stage
+==    46 |       18 |       14 |       14 |       10 |        c | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==    47 |       18 |       14 |       14 |       14 |       10 |        c |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==    48 |       18 |       14 |       14 |       14 |       14 |       10 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==    49 |       18 |       14 |       14 |       14 |       14 |       14 |
+==    50 |       1c |       18 |       14 |       14 |       14 |       14 |
+==    51 |       20 |       1c |       18 |       14 |       14 |       14 |
+==    52 |       24 |       20 |       1c |       18 |       14 |       14 |
+Data hazard... register X1 will be written by the instruction in the ex2 stage
+==    53 |       24 |       20 |       20 |       1c |       18 |       14 |
+Data hazard... register X1 will be written by the instruction in the mem stage
+Control hazard... squashing ID, and EX1 and resetting PC
+==    54 |        c | ffffffff | ffffffff | ffffffff |       1c |       18 |
+==    55 |       10 |        c | ffffffff | ffffffff | ffffffff |       1c |
+==    56 |       14 |       10 |        c | ffffffff | ffffffff | ffffffff |
+==    57 |       18 |       14 |       10 |        c | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex1 stage
+==    58 |       18 |       14 |       14 |       10 |        c | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==    59 |       18 |       14 |       14 |       14 |       10 |        c |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==    60 |       18 |       14 |       14 |       14 |       14 |       10 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==    61 |       18 |       14 |       14 |       14 |       14 |       14 |
+==    62 |       1c |       18 |       14 |       14 |       14 |       14 |
+==    63 |       20 |       1c |       18 |       14 |       14 |       14 |
+==    64 |       24 |       20 |       1c |       18 |       14 |       14 |
+Data hazard... register X1 will be written by the instruction in the ex2 stage
+==    65 |       24 |       20 |       20 |       1c |       18 |       14 |
+Data hazard... register X1 will be written by the instruction in the mem stage
+Control hazard... squashing ID, and EX1 and resetting PC
+==    66 |        c | ffffffff | ffffffff | ffffffff |       1c |       18 |
+==    67 |       10 |        c | ffffffff | ffffffff | ffffffff |       1c |
+==    68 |       14 |       10 |        c | ffffffff | ffffffff | ffffffff |
+==    69 |       18 |       14 |       10 |        c | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex1 stage
+==    70 |       18 |       14 |       14 |       10 |        c | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==    71 |       18 |       14 |       14 |       14 |       10 |        c |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==    72 |       18 |       14 |       14 |       14 |       14 |       10 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==    73 |       18 |       14 |       14 |       14 |       14 |       14 |
+==    74 |       1c |       18 |       14 |       14 |       14 |       14 |
+==    75 |       20 |       1c |       18 |       14 |       14 |       14 |
+Control hazard... squashing ID, and EX1 and resetting PC
+==    76 |       20 | ffffffff | ffffffff | ffffffff |       14 |       14 |
+==    77 |       24 |       20 | ffffffff | ffffffff | ffffffff |       14 |
+==    78 |       28 |       24 |       20 | ffffffff | ffffffff | ffffffff |
+==    79 |       2c |       28 |       24 |       20 | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==    80 |       2c |       28 |       28 |       24 |       20 | ffffffff |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==    81 |       2c |       28 |       28 |       28 |       24 |       20 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==    82 |       2c |       28 |       28 |       28 |       28 |       24 |
+==    83 |       30 |       2c |       28 |       28 |       28 |       28 |
+==    84 |       34 |       30 |       2c |       28 |       28 |       28 |
+Data hazard... register X2 will be written by the instruction in the ex2 stage
+==    85 |       34 |       30 |       30 |       2c |       28 |       28 |
+Data hazard... register X2 will be written by the instruction in the mem stage
+Control hazard... squashing ID, and EX1 and resetting PC
+==    86 |        c | ffffffff | ffffffff | ffffffff |       2c |       28 |
+==    87 |       10 |        c | ffffffff | ffffffff | ffffffff |       2c |
+==    88 |       14 |       10 |        c | ffffffff | ffffffff | ffffffff |
+==    89 |       18 |       14 |       10 |        c | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex1 stage
+==    90 |       18 |       14 |       14 |       10 |        c | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==    91 |       18 |       14 |       14 |       14 |       10 |        c |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==    92 |       18 |       14 |       14 |       14 |       14 |       10 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==    93 |       18 |       14 |       14 |       14 |       14 |       14 |
+==    94 |       1c |       18 |       14 |       14 |       14 |       14 |
+==    95 |       20 |       1c |       18 |       14 |       14 |       14 |
+==    96 |       24 |       20 |       1c |       18 |       14 |       14 |
+Data hazard... register X1 will be written by the instruction in the ex2 stage
+==    97 |       24 |       20 |       20 |       1c |       18 |       14 |
+Data hazard... register X1 will be written by the instruction in the mem stage
+Control hazard... squashing ID, and EX1 and resetting PC
+==    98 |        c | ffffffff | ffffffff | ffffffff |       1c |       18 |
+==    99 |       10 |        c | ffffffff | ffffffff | ffffffff |       1c |
+==   100 |       14 |       10 |        c | ffffffff | ffffffff | ffffffff |
+==   101 |       18 |       14 |       10 |        c | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex1 stage
+==   102 |       18 |       14 |       14 |       10 |        c | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==   103 |       18 |       14 |       14 |       14 |       10 |        c |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==   104 |       18 |       14 |       14 |       14 |       14 |       10 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==   105 |       18 |       14 |       14 |       14 |       14 |       14 |
+==   106 |       1c |       18 |       14 |       14 |       14 |       14 |
+==   107 |       20 |       1c |       18 |       14 |       14 |       14 |
+Control hazard... squashing ID, and EX1 and resetting PC
+==   108 |       20 | ffffffff | ffffffff | ffffffff |       14 |       14 |
+==   109 |       24 |       20 | ffffffff | ffffffff | ffffffff |       14 |
+==   110 |       28 |       24 |       20 | ffffffff | ffffffff | ffffffff |
+==   111 |       2c |       28 |       24 |       20 | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==   112 |       2c |       28 |       28 |       24 |       20 | ffffffff |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==   113 |       2c |       28 |       28 |       28 |       24 |       20 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==   114 |       2c |       28 |       28 |       28 |       28 |       24 |
+==   115 |       30 |       2c |       28 |       28 |       28 |       28 |
+==   116 |       34 |       30 |       2c |       28 |       28 |       28 |
+Data hazard... register X2 will be written by the instruction in the ex2 stage
+==   117 |       34 |       30 |       30 |       2c |       28 |       28 |
+Data hazard... register X2 will be written by the instruction in the mem stage
+Control hazard... squashing ID, and EX1 and resetting PC
+==   118 |        c | ffffffff | ffffffff | ffffffff |       2c |       28 |
+==   119 |       10 |        c | ffffffff | ffffffff | ffffffff |       2c |
+==   120 |       14 |       10 |        c | ffffffff | ffffffff | ffffffff |
+==   121 |       18 |       14 |       10 |        c | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex1 stage
+==   122 |       18 |       14 |       14 |       10 |        c | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==   123 |       18 |       14 |       14 |       14 |       10 |        c |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==   124 |       18 |       14 |       14 |       14 |       14 |       10 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==   125 |       18 |       14 |       14 |       14 |       14 |       14 |
+==   126 |       1c |       18 |       14 |       14 |       14 |       14 |
+==   127 |       20 |       1c |       18 |       14 |       14 |       14 |
+==   128 |       24 |       20 |       1c |       18 |       14 |       14 |
+Data hazard... register X1 will be written by the instruction in the ex2 stage
+==   129 |       24 |       20 |       20 |       1c |       18 |       14 |
+Data hazard... register X1 will be written by the instruction in the mem stage
+Control hazard... squashing ID, and EX1 and resetting PC
+==   130 |        c | ffffffff | ffffffff | ffffffff |       1c |       18 |
+==   131 |       10 |        c | ffffffff | ffffffff | ffffffff |       1c |
+==   132 |       14 |       10 |        c | ffffffff | ffffffff | ffffffff |
+==   133 |       18 |       14 |       10 |        c | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex1 stage
+==   134 |       18 |       14 |       14 |       10 |        c | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex2 stage
+==   135 |       18 |       14 |       14 |       14 |       10 |        c |
+Data hazard... register X3 will be written by the instruction in the mem stage
+==   136 |       18 |       14 |       14 |       14 |       14 |       10 |
+Data hazard... register X3 will be written by the instruction in the wb stage
+==   137 |       18 |       14 |       14 |       14 |       14 |       14 |
+==   138 |       1c |       18 |       14 |       14 |       14 |       14 |
+==   139 |       20 |       1c |       18 |       14 |       14 |       14 |
+==   140 |       24 |       20 |       1c |       18 |       14 |       14 |
+Data hazard... register X1 will be written by the instruction in the ex2 stage
+==   141 |       24 |       20 |       20 |       1c |       18 |       14 |
+Data hazard... register X1 will be written by the instruction in the mem stage
+Control hazard... squashing ID, and EX1 and resetting PC
+==   142 |        c | ffffffff | ffffffff | ffffffff |       1c |       18 |
+==   143 |       10 |        c | ffffffff | ffffffff | ffffffff |       1c |
+==   144 |       14 |       10 |        c | ffffffff | ffffffff | ffffffff |
+==   145 |       18 |       14 |       10 |        c | ffffffff | ffffffff |
+Data hazard... register X3 will be written by the instruction in the ex1 stage
+Control hazard... squashing ID, and EX1 and resetting PC
+==   146 |       30 | ffffffff | ffffffff | ffffffff |        c | ffffffff |
+==   147 |       34 |       30 | ffffffff | ffffffff | ffffffff |        c |
+==   148 |       38 |       34 |       30 | ffffffff | ffffffff | ffffffff |
+==   149 |       3c |       38 |       34 |       30 | ffffffff | ffffffff |
+==   150 |       40 |       3c |       38 |       34 |       30 | ffffffff |
+==   151 |       44 |       40 |       3c |       38 |       34 |       30 |
+==   152 |       48 |       44 |       40 |       3c |       38 |       34 |
+=== Simulation Reports ===
+Non-Zero Registers....
+  X0 = 4000
+  X2 = 3
+Instruction Count Report...
+   OPCODE - CNT
+      MOV -   1
+     EXIT -   1
+     ADDI -  15
+      SUB -   9
+       LD -   2
+       ST -   1
+        B -   9
+      CBZ -  10
+    CBNEG -   9
+
+Total Instructions=57 Cycles=153 IPC= 0.37
