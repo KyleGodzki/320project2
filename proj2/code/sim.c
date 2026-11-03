@@ -3,11 +3,9 @@
 #include <stdint.h>
 #include <string.h>
 
-/*------------------------------------------------------------------------
-	Main Function Definition
-------------------------------------------------------------------------*/
+#define MEM_WORDS 2048
+
 int main(int argc,char **argv) {
-	// TODO: Code your simulator here
-	return 0;
+	
 
 }
