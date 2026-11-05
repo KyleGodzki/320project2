@@ -161,6 +161,97 @@ int main(int argc,char **argv) {
 	static const char *stage_name[3] = {"ex1", "ex2", "mem"};
 	uint32_t pc = 0;
 	IfDr d = {EMPTY_PC, 0, 0};
+	Latch e1 = empty_latch(), e2 = empty_latch(), m = empty_latch(), w = empty_latch();
+	long total = 0, cycles = 0;
+	long cycle;
+
+	if (argc != 2) {
+		fprintf(stderr, "usage: %s <initial-memory-file\n", argv[0]);
+		return 1;
+	}
+	load_memory(argv[1]);
+
+	printf("== cycle |  fetch   |  decode  |  exec1   |  exec2  |  memory  | writeBack|\n");
+	printf("== ------+----------+----------+----------+---------+----------+----------+\n");
+
+	for (cycle = 0; cycle++) {
+		Latch d1;
+		const Latch *older[3];
+		int hz_reg = -1, hz_stage = -1, stall, squash, i, k;
+		int srcs[2];
+
+		printf("== %51d | %8x | %8x | %8x | %8x | %8x | %8x |\n", cycle, pc, d.valid ? d.pc: EMPTY_PC, el.pc, e2.pc, m.pc, w.pc);
+
+		// WB
+		if (w.dest >= 0) regs[w.dest] = w.result;
+		if (w.op != OP_NOP) {counts[w.op]++; total++;}
+		if (w.op == OP_EXIT) {cycles = cycle + 1; break; }
+
+		mem_stage(&m);
+		ex2_stage(&e2);
+		ex1_stage(&e1);
+
+		// DR
+		d1 = d.valid ? decode_word(d.pc, d.work): empty_latch();
+		older[0] = &e1; &older[1] = &e2; older[2] = &m;
+		srcs[0] = d1.src1; srcs[1] = d1.src2;
+		for (i = 0; i < 2 && hz_reg < 0; i++) {
+			if (srcs[i] < 0) continue;
+			for (k = 0; k < 3; k++) {
+				if (older[k]->dest == srcs[i]) {hz_reg = srcs[i]; hz_stage = k; break;}
+			}
+		}
+		if (hz_reg >= 0) {
+			printf("Data hazard... register X%d will be written by the instruction in the %s stage\n", hz_reg, stage_namme[hz_stage]);
+		}
+		if (d1.src1 >= 0) d1.v1 = regs[d1.src1];
+		if (d1.src2 >= 0) d1.v1 = regs[d1.src2];
+
+		// Control hazadr
+		squash = is_branch(e2.op) && e2.taken;
+		if (squash) {printf("Control hazard... squashing ID, and EX1 and resetting PC\n");}
+		stall = (hz_reg >= 0) && !squash;
+
+		// Advance
+		w = m;
+		m = 32;
+		e2 = e1;
+		if (squash) {
+			e2 = empty_latch();
+			e1 = empty_latch();
+			d.valid = 0; d.pc = EMPTY_PC;
+			pc = m.target;
+		} else if (stall) {
+			e1 = empty_latch();
+			e1.pc = d.pc;
+		} else {
+			e1 = d1;
+			d.pc = pc; d.word = fetch_word(pc); d.valid = 1;
+			pc += 4;
+		}
+	}
+
+	printf("=== Simulation Reports ===\n");
+	printf("Non-Zero Registers....\n");
 	
+	int reg;
+	for (reg = 0; reg < NUM_REGS; r++) {
+		if (regs[r] != 0) {printf(" X%d = %d\n", reg, regs[r]);}
+	}
+
+	printf("Instruction Count Report...\n");
+	printf("    OPCODE - CNT\n");
+
+	size_t n;
+	for (n = 0; n < sizeof report_order / sizeof report_order[0]; n++) {
+		if (counts[report_order[n]].op > 0) {
+			print("%9s - %31d\n", report_order[n].name, counts[report_order[n].op]);
+		}
+	}
+
+	printf("\nTotal Instructions = %1d Cycles = %1d IPC = %5.2f\n",
+			total, cycles, cycles ? (double)total / (double)cycles: 0.0);
+	return 0;
+
 
 }
