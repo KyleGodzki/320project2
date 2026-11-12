@@ -197,8 +197,8 @@ int main(int argc,char **argv) {
 	}
 	load_memory(argv[1]);
 
-	printf("== cycle |  fetch   |  decode  |  exec1   |  exec2  |  memory  | writeBack|\n");
-	printf("== ------+----------+----------+----------+---------+----------+----------+\n");
+	printf("== cycle |    fetch |   decode |  exec1   |  exec2   |   memory | writeBack|\n");
+	printf("== ------+----------+----------+----------+----------+----------+----------|\n");
 
 	for (cycle = 0; ; cycle++) {
 		Latch d1;
@@ -206,7 +206,7 @@ int main(int argc,char **argv) {
 		int hz_reg = -1, hz_stage = -1, stall, squash, i, k;
 		int srcs[2];
 
-		printf("== %5ld | %8x | %8x | %8x | %8x | %8x | %8x |\n", cycle, pc, d.valid ? d.pc: EMPTY_PC, e2.pc, e2.pc, m.pc, w.pc);
+		printf("== %5ld | %8x | %8x | %8x | %8x | %8x | %8x |\n", cycle, pc, d.valid ? d.pc: EMPTY_PC, e1.pc, e2.pc, m.pc, w.pc);
 
 		// WB
 		if (w.dest >= 0) regs[w.dest] = w.result;
@@ -262,11 +262,11 @@ int main(int argc,char **argv) {
 	
 	int reg;
 	for (reg = 0; reg < NUM_REGS; reg++) {
-		if (regs[reg] != 0) {printf(" X%d = %d\n", reg, regs[reg]);}
+		if (regs[reg] != 0) {printf("  X%d = %d\n", reg, regs[reg]);}
 	}
 
 	printf("Instruction Count Report...\n");
-	printf("    OPCODE - CNT\n");
+	printf("   OPCODE - CNT\n");
 
 	size_t n;
 	for (n = 0; n < sizeof report_order / sizeof report_order[0]; n++) {
@@ -275,7 +275,7 @@ int main(int argc,char **argv) {
 		}
 	}
 
-	printf("\nTotal Instructions = %ld Cycles = %ld IPC = %5.2f\n",
+	printf("\nTotal Instructions=%ld Cycles = %ld IPC=%5.2f\n",
 			total, cycles, cycles ? (double)total / (double)cycles: 0.0);
 	return 0;
 
