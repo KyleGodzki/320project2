@@ -2,13 +2,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define MEM_WORDS 2048
 #define NUM_REGS 32
 #define EMPTY_PC 0xffffffffu
-
-#define FIRST_BYTE_IS_MSB 1
-#define BRANCH_BASE_OFFSET 0
 
 enum {
 	OP_NOP = 0x00, OP_ADD = 0x02, OP_ADDI = 0x03, OP_SUB = 0x04, OP_SUBI = 0x05,
@@ -48,6 +46,21 @@ static uint32_t mem[MEM_WORDS];
 static int32_t regs[NUM_REGS];
 static long counts[256];
 
+static int32_t add32(int32_t a, int32_t b) {
+	return (int32_t)((uint32_t)a + (uint32_t)b);
+}
+static int32_t sub32(int32_t a, int32_t b) {
+	return (int32_t)((uint32_t)a - (uint32_t)b);
+}
+static int32_t mul32(int32_t a, int32_t b) {
+	return (int32_t)((uint32_t)a * (uint32_t)b);
+}
+static int32_t div32(int32_t a, int32_t b) {
+	if (b == 0) return 0;
+	if (b == -1) return sub32(0, a);
+	return a / b;
+}
+
 static Latch empty_latch(void) {
 	Latch empty;
 	empty.pc = EMPTY_PC;
@@ -55,6 +68,7 @@ static Latch empty_latch(void) {
 	empty.dest = 0;
 	empty.src1 = 0;
        	empty.src2 = 0;
+	return empty;
 }
 
 void load_memory(const char *path) {
@@ -64,7 +78,7 @@ void load_memory(const char *path) {
 		perror("Can't open file!"); 
 		exit(1);
 	}
-	while (fscanf(f, "11x %11x", &a, &v) == 2) {
+	while (fscanf(f, "%llx %llx", &a, &v) == 2) {
 		if ((a & 3) == 0 && (a >> 2) < MEM_WORDS)
 			mem[a >> 2] = (uint32_t)v;
 	}
@@ -73,7 +87,7 @@ void load_memory(const char *path) {
 
 static uint32_t fetch_word(uint32_t address) {
 	uint32_t index = address >> 2;
-	return index < MEMWORDS ? mem[index] : 0;
+	return index < MEM_WORDS ? mem[index] : 0;
 }
 
 static Latch decode_word(uint32_t pc, uint32_t w) {
@@ -88,18 +102,30 @@ static Latch decode_word(uint32_t pc, uint32_t w) {
 	decode.op = (int)b1;
 	switch (b1) {
 		case OP_ADD: case OP_SUB: case OP_MUL: case OP_DIV:
-			decode.dest = b2; decode.src1 = b3; decide,src2 = b4;
+			decode.dest = b2 & 31; decode.src1 = b3 & 31; decode.src2 = b4 & 31;
+			break;
 		case OP_ADDI: case OP_SUBI: case OP_MULI: case OP_DIVI: case OP_LD:
-			decode.dest = b2; decode.src1 = b3; decode.imm = b4;
+			decode.dest = b2 & 31; decode.src1 = b3 & 31; decode.imm = (int8_t)b4;
+			break;
 		case OP_ST:
-			decode.src1 = b2; decode.src2 = b3; decode.imm = b4;
+			decode.src1 = b3 & 31; decode.src2 = b2 & 31; decode.imm = (int8_t)b4;
+			break;
 		case OP_MOV:
-			decode.dest = b2; decode.imm = b3;
-		case OP_B: case OP_CBZ: case OP_CBNZ: case OP_CBNEG:
-			decode.src1 = b2; decode.imm = b3;
+			decode.dest = b2 & 31; decode.imm = (int16_t)((b3 << 8) | b4);
+			break;
+		case OP_B:
+			decode.imm = (int16_t)((b3 << 8) | b4);
+			break;
+		case OP_CBZ: case OP_CBNZ: case OP_CBNEG:
+			decode.src1 = b2 & 31; decode.imm = (int16_t)((b3 << 8) | b4);
+			break;
+		case OP_EXIT:
+			break;
 		default:
-			decode.dest = OP_NOP; decode.src1 = OP_NOP; decode.src2 = OP_NOP;
+			decode.op = OP_NOP;
+			break;
 	}
+	return decode;
 
 }
 
@@ -110,48 +136,47 @@ bool is_branch(uint32_t op) {
 		default:
 			return false;
 	}
-	return false;
 }
 
-static void ex1_stage(Latch *1) {
-	switch (1->op) {
-		case OP_ADD: 1->result = add32(1->v1, 1->v2); break;
-		case OP_ADDI: 1->result = add32(1->v1, 1->imm); break;
-		case OP_SUB: 1->result = sub32(1->v1, 1->v2); break;
-		case OP_SUBI: 1->result = sub32(1->v1, 1->imm); break;
-		case OP_MOV: 1->result = 1->imm;
+static void ex1_stage(Latch *l) {
+	switch (l->op) {
+		case OP_ADD: l->result = add32(l->v1, l->v2); break;
+		case OP_ADDI: l->result = add32(l->v1, l->imm); break;
+		case OP_SUB: l->result = sub32(l->v1, l->v2); break;
+		case OP_SUBI: l->result = sub32(l->v1, l->imm); break;
+		case OP_MOV: l->result = l->imm; break;
 		case OP_LD: case OP_ST:
-			     1->addr = (uint32_t)add32(1->v1, 1->imm);
+			     l->addr = (uint32_t)add32(l->v1, l->imm);
 			     break;
 		case OP_B: case OP_CBZ: case OP_CBNZ: case OP_CBNEG:
-			     1->target = 1->pc + 4u * (uint32_t)1->imm;
+			     l->target = l->pc + 4u * (uint32_t)l->imm;
 			     break;
 		default:
 			     break;
 	}
 }
 
-static void ex2_stage(Latch *1) {
+static void ex2_stage(Latch *l) {
 	switch (1->op) {
-		case OP_MUL: 1->result = mul32(1->v1, 1->v2); break;
-		case OP_MULI: 1->result = mul32(1->v1, 1->imm); break;
-		case OP_DIV: 1->result = div32(1->v1, 1->v2); break;
-		case OP_DIVI: 1->result = div32(1->v1, 1->imm); break;
-		case OP_B: 1->taken = 1; break;
-		case OP_CBZ: 1->taken = (1->v1 == 0); break;
-		case OP_CBNZ: 1->taken = (1->v1 != 0); break;
-		case OP_CBNEG: 1->taken = (1->v1 < 0); break;
+		case OP_MUL: l->result = mul32(l->v1, l->v2); break;
+		case OP_MULI: l->result = mul32(l->v1, l->imm); break;
+		case OP_DIV: l->result = div32(l->v1, l->v2); break;
+		case OP_DIVI: l->result = div32(l->v1, l->imm); break;
+		case OP_B: l->taken = 1; break;
+		case OP_CBZ: l->taken = (l->v1 == 0); break;
+		case OP_CBNZ: l->taken = (l->v1 != 0); break;
+		case OP_CBNEG: l->taken = (l->v1 < 0); break;
 		default:
 			       break;
 	}
 }
 
-static void mem_stage(Latch *1) {
-	uint32_t index = 1->address >> 2;
-	if (1->op == OP_LD) {
-		1->result = (int32_t)(index < MEM_WORDS ? mem[idx]: 0);
-	} else if (1->op == OP_ST) {
-		if (idx < MEM_WORDS) mem[idx] = (uint32_t)1->v2;
+static void mem_stage(Latch *l) {
+	uint32_t index = l->addr >> 2;
+	if (l->op == OP_LD) {
+		l->result = (int32_t)(index < MEM_WORDS ? mem[index]: 0);
+	} else if (l->op == OP_ST) {
+		if (index < MEM_WORDS) mem[index] = (uint32_t)l->v2;
 	}
 }
 
@@ -174,13 +199,13 @@ int main(int argc,char **argv) {
 	printf("== cycle |  fetch   |  decode  |  exec1   |  exec2  |  memory  | writeBack|\n");
 	printf("== ------+----------+----------+----------+---------+----------+----------+\n");
 
-	for (cycle = 0; cycle++) {
+	for (cycle = 0; cycle++;) {
 		Latch d1;
 		const Latch *older[3];
-		int hz_reg = -1, hz_stage = -1, stall, squash, i, k;
+		int hz_reg = -1, stall, squash, i, k;
 		int srcs[2];
 
-		printf("== %51d | %8x | %8x | %8x | %8x | %8x | %8x |\n", cycle, pc, d.valid ? d.pc: EMPTY_PC, el.pc, e2.pc, m.pc, w.pc);
+		printf("== %5ld | %8x | %8x | %8x | %8x | %8x | %8x |\n", cycle, pc, d.valid ? d.pc: EMPTY_PC, e2.pc, e2.pc, m.pc, w.pc);
 
 		// WB
 		if (w.dest >= 0) regs[w.dest] = w.result;
@@ -192,8 +217,8 @@ int main(int argc,char **argv) {
 		ex1_stage(&e1);
 
 		// DR
-		d1 = d.valid ? decode_word(d.pc, d.work): empty_latch();
-		older[0] = &e1; &older[1] = &e2; older[2] = &m;
+		d1 = d.valid ? decode_word(d.pc, d.word): empty_latch();
+		older[0] = &e1; older[1] = &e2; older[2] = &m;
 		srcs[0] = d1.src1; srcs[1] = d1.src2;
 		for (i = 0; i < 2 && hz_reg < 0; i++) {
 			if (srcs[i] < 0) continue;
@@ -202,10 +227,10 @@ int main(int argc,char **argv) {
 			}
 		}
 		if (hz_reg >= 0) {
-			printf("Data hazard... register X%d will be written by the instruction in the %s stage\n", hz_reg, stage_namme[hz_stage]);
+			printf("Data hazard... register X%d will be written by the instruction in the %s stage\n", hz_reg, stage_name[hz_stage]);
 		}
 		if (d1.src1 >= 0) d1.v1 = regs[d1.src1];
-		if (d1.src2 >= 0) d1.v1 = regs[d1.src2];
+		if (d1.src2 >= 0) d1.v2 = regs[d1.src2];
 
 		// Control hazadr
 		squash = is_branch(e2.op) && e2.taken;
@@ -214,7 +239,7 @@ int main(int argc,char **argv) {
 
 		// Advance
 		w = m;
-		m = 32;
+		m = e2;
 		e2 = e1;
 		if (squash) {
 			e2 = empty_latch();
@@ -235,8 +260,8 @@ int main(int argc,char **argv) {
 	printf("Non-Zero Registers....\n");
 	
 	int reg;
-	for (reg = 0; reg < NUM_REGS; r++) {
-		if (regs[r] != 0) {printf(" X%d = %d\n", reg, regs[r]);}
+	for (reg = 0; reg < NUM_REGS; reg++) {
+		if (regs[reg] != 0) {printf(" X%d = %d\n", reg, regs[reg]);}
 	}
 
 	printf("Instruction Count Report...\n");
@@ -244,12 +269,12 @@ int main(int argc,char **argv) {
 
 	size_t n;
 	for (n = 0; n < sizeof report_order / sizeof report_order[0]; n++) {
-		if (counts[report_order[n]].op > 0) {
-			print("%9s - %31d\n", report_order[n].name, counts[report_order[n].op]);
+		if (counts[report_order[n].op] > 0) {
+			printf("%9s - %3ld\n", report_order[n].name, counts[report_order[n].op]);
 		}
 	}
 
-	printf("\nTotal Instructions = %1d Cycles = %1d IPC = %5.2f\n",
+	printf("\nTotal Instructions = %ld Cycles = %ld IPC = %5.2f\n",
 			total, cycles, cycles ? (double)total / (double)cycles: 0.0);
 	return 0;
 
