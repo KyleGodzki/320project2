@@ -157,7 +157,7 @@ static void ex1_stage(Latch *l) {
 }
 
 static void ex2_stage(Latch *l) {
-	switch (1->op) {
+	switch (l->op) {
 		case OP_MUL: l->result = mul32(l->v1, l->v2); break;
 		case OP_MULI: l->result = mul32(l->v1, l->imm); break;
 		case OP_DIV: l->result = div32(l->v1, l->v2); break;
@@ -202,7 +202,7 @@ int main(int argc,char **argv) {
 	for (cycle = 0; cycle++;) {
 		Latch d1;
 		const Latch *older[3];
-		int hz_reg = -1, stall, squash, i, k;
+		int hz_reg = -1, hz_stage = -1, stall, squash, i, k;
 		int srcs[2];
 
 		printf("== %5ld | %8x | %8x | %8x | %8x | %8x | %8x |\n", cycle, pc, d.valid ? d.pc: EMPTY_PC, e2.pc, e2.pc, m.pc, w.pc);
