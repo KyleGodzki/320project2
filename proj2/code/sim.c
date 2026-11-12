@@ -199,7 +199,7 @@ int main(int argc,char **argv) {
 	printf("== cycle |  fetch   |  decode  |  exec1   |  exec2  |  memory  | writeBack|\n");
 	printf("== ------+----------+----------+----------+---------+----------+----------+\n");
 
-	for (cycle = 0; cycle++;) {
+	for (cycle = 0; ; cycle++) {
 		Latch d1;
 		const Latch *older[3];
 		int hz_reg = -1, hz_stage = -1, stall, squash, i, k;
