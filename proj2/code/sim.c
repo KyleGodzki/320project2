@@ -63,11 +63,12 @@ static int32_t div32(int32_t a, int32_t b) {
 
 static Latch empty_latch(void) {
 	Latch empty;
+	memset(&empty, 0, sizeof empty);
 	empty.pc = EMPTY_PC;
 	empty.op = OP_NOP;
-	empty.dest = 0;
-	empty.src1 = 0;
-       	empty.src2 = 0;
+	empty.dest = -1;
+	empty.src1 = -1;
+       	empty.src2 = -1;
 	return empty;
 }
 
