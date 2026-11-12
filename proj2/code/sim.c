@@ -275,7 +275,7 @@ int main(int argc,char **argv) {
 		}
 	}
 
-	printf("\nTotal Instructions=%ld Cycles = %ld IPC=%5.2f\n",
+	printf("\nTotal Instructions=%ld Cycles=%ld IPC=%5.2f\n",
 			total, cycles, cycles ? (double)total / (double)cycles: 0.0);
 	return 0;
 
